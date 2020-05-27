@@ -10,6 +10,8 @@ let vmLog = new Vue({
         showOnlineUsers: true,
         followUser: null,
         followInterval: null,
+        type: null,
+        circleRadius: 100
     },
     filters: {
         parseInt: function (value) {
@@ -33,10 +35,24 @@ let vmLog = new Vue({
             if (this.followInterval !== null) clearInterval(this.followInterval);
             if (newUser !== null) {
                 this.followUser = newUser;
-                this.followInterval = setInterval(() => {
-                    // console.log(this.followUser)
-                    this.deliveryTo(this.followUser.user.x, this.followUser.user.y);
-                }, 100);
+                if (this.type === 'follow') {
+                    this.followInterval = setInterval(() => {
+                        // console.log(this.followUser)
+                        this.deliveryTo(this.followUser.user.x, this.followUser.user.y);
+                    }, 100);
+                } else if (this.type === 'around') {
+                    let degree = 0;
+                    this.followInterval = setInterval(() => {
+                        let r = this.circleRadius;
+                        let x0 = this.followUser.user.x;
+                        let y0 = this.followUser.user.y;
+                        degree += 10;
+                        let hudu = 2 * Math.PI / 360 * degree;
+                        let x1 = x0 + Math.sin(hudu) * r;
+                        let y1 = y0 - Math.cos(hudu) * r;
+                        this.deliveryTo(x1, y1);
+                    }, 50)
+                }
                 // console.log(this.followInterval)
             }
         },
@@ -103,12 +119,21 @@ let vmLog = new Vue({
             this.model = model;
         },
         onClickFollowUser(user) {
+            this.type = 'follow';
             this.followUser = user;
             // console.log(user)
         },
         onClickCancelFollow() {
             this.followUser = null;
             clearInterval(this.followInterval);
+        },
+        onClickAroundUser(user) {
+            this.type = 'around';
+            this.followUser = user;
+        },
+        setCircleRadius(r) {
+            this.circleRadius = r;
+            console.log(r);
         }
     }
 });

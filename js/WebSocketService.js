@@ -207,18 +207,38 @@ var WebSocketService = function (model, webSocket) {
             app.speed(speed);
         }
 
-        regexp = /^dance$/;
+        regexp = /^circle(\d+)$/;
         if (regexp.test(msg)) {
+            let match = msg.match(regexp);
+            let r = (match[1] >= 10 ? parseInt(match[1]) : 50);
+            vmLog.setCircleRadius(r)
+            return;
+        }
 
-            model.userTadpole.targetX = -230;
-            model.userTadpole.targetY = -420;
-            model.userTadpole.targetMomentum = 15;
-            setTimeout(function () {
-                model.userTadpole.targetX = 0;
-                model.userTadpole.targetY = 0;
-                model.userTadpole.targetMomentum = 0;
-            },60000)
+        regexp = /^circle(\d+)[,，](\d+)[,，]?(\d+)?$/;
+        if (regexp.test(msg)) {
+            if (typeof circleInterval !== "undefined") {
+                clearInterval(circleInterval);
+            }
+            let match = msg.match(regexp);
+            let x0 = parseInt(match[1]);
+            let y0 = parseInt(match[2]);
+            let r = (match[3] !== undefined && match[3] >= 10 ? parseInt(match[3]) : 100);
+            let degree = 0;
+            circleInterval = setInterval(() => {
+                degree += 10;
+                let hudu = 2 * Math.PI / 360 * degree;
+                let x1 = x0 + Math.sin(hudu) * r;
+                let y1 = y0 - Math.cos(hudu) * r;
+                model.userTadpole.x = x1;
+                model.userTadpole.y = y1;
+            }, 50)
+            return;
+        }
 
+        regexp = /^stop circle$/;
+        if (regexp.test(msg)) {
+            clearInterval(circleInterval);
             return;
         }
 

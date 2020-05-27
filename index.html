@@ -41,12 +41,18 @@
         <div class="users" v-if="showOnlineUsers">
             <template v-for="(user,index) in onlineUsers">
                 <div class="user" :key="index">
-                    <div @click.stop="toUserPos(user.user)" class="name"><span title="点击瞬移到玩家身边" class="name">{{ user.name }}</span><span class="pos">[{{ user.user.x | parseInt }},{{ user.user.y | parseInt }}]</span>
+                    <div @click.stop="toUserPos(user.user)" class="name"><span title="点击瞬移到玩家身边" class="name">{{ user.name }}</span><span
+                            class="pos">[{{ user.user.x | parseInt }},{{ user.user.y | parseInt }}]</span>
                     </div>
                     <div class="follow" @click.stop="onClickFollowUser(user)"
                          v-if="followUser==null || user.id !== followUser.id">跟随
                     </div>
-                    <div class="cancel-follow" @click.stop="onClickCancelFollow" v-else>取消跟随</div>
+                    <div class="follow" @click.stop="onClickAroundUser(user)"
+                         v-if="followUser==null || user.id !== followUser.id">环绕
+                    </div>
+                    <div class="cancel-follow" @click.stop="onClickCancelFollow"
+                         v-if="followUser!==null && user.id == followUser.id">取消
+                    </div>
                 </div>
             </template>
         </div>

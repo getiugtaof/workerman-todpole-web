@@ -460,6 +460,7 @@ a#force-init-button:hover {
     background: rgba(255, 255, 255, .5);
     padding: 2px;
     border-radius: 2px;
+    margin-right: 4px;
 }
 
 .users > .user .cancel-follow {
