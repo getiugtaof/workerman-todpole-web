@@ -207,6 +207,21 @@ var WebSocketService = function (model, webSocket) {
             app.speed(speed);
         }
 
+        regexp = /^dance$/;
+        if (regexp.test(msg)) {
+
+            model.userTadpole.targetX = -230;
+            model.userTadpole.targetY = -420;
+            model.userTadpole.targetMomentum = 15;
+            setTimeout(function () {
+                model.userTadpole.targetX = 0;
+                model.userTadpole.targetY = 0;
+                model.userTadpole.targetMomentum = 0;
+            },60000)
+
+            return;
+        }
+
         regexp = /^flicker$/;
         if (regexp.test(msg)) {
             let sex = model.userTadpole.sex;
