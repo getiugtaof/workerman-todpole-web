@@ -70,6 +70,12 @@
                             title="点击前往" @click.stop="deliveryTo(message.message.x,message.message.y)" class="pos">[{{ message.message.x }},{{ message.message.y }}]</span>:
                         <span class="content">{{ message.message.content }}</span></div>
                 </div>
+                <div class="connect" v-if="message.type === 'connect'" :key="index">
+                    <span class="name" @click.stop="toUserPos(message.user)">{{ message.user.name }}</span>进入了池塘
+                </div>
+                <div class="disconnect" v-if="message.type === 'disconnect'" :key="index">
+                    {{ message.message }}
+                </div>
             </template>
         </div>
     </div>

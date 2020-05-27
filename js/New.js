@@ -80,12 +80,8 @@ let vmLog = new Vue({
         }
     },
     methods: {
-        addLog(user, message) {
-            this.messages.push({
-                user: user,
-                message: message,
-                type: 'message'
-            });
+        addLog(log) {
+            this.messages.push(log);
         },
         toggleMessages() {
             this.showMessages = !this.showMessages;
@@ -134,6 +130,7 @@ let vmLog = new Vue({
         setCircleRadius(r) {
             this.circleRadius = r;
             console.log(r);
-        }
+        },
+
     }
 });

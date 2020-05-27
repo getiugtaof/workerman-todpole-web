@@ -15,8 +15,9 @@ var WebSocketService = function (model, webSocket) {
         delete model.tadpoles[-1];
 
         $('#chat').initChat();
-        if ($.cookie('todpole_name')) {
-            webSocketService.sendMessage('name:' + $.cookie('todpole_name'));
+        let name = $.cookie('todpole_name');
+        if (name) {
+            webSocketService.sendMessage('name:' + name);
         }
         if ($.cookie('todpole_sex')) {
             webSocketService.sendMessage('我是' + $.cookie('todpole_sex'));
@@ -45,6 +46,10 @@ var WebSocketService = function (model, webSocket) {
             tadpole.x = data.x;
             tadpole.y = data.y;
             vmLog.updateUsers(model.tadpoles);
+            vmLog.addLog({
+                type: 'connect',
+                user: tadpole,
+            })
         } else {
             tadpole.targetX = data.x;
             tadpole.targetY = data.y;
@@ -64,16 +69,24 @@ var WebSocketService = function (model, webSocket) {
         }
         tadpole.timeSinceLastServerUpdate = 0;
         tadpole.messages.push(new Message(data.message));
-        vmLog.addLog(tadpole, {
-            content: data.message,
-            time: new Date(),
-            x: parseInt(tadpole.x),
-            y: parseInt(tadpole.y)
+        vmLog.addLog({
+            user: tadpole,
+            message: {
+                content: data.message,
+                time: new Date(),
+                x: parseInt(tadpole.x),
+                y: parseInt(tadpole.y)
+            },
+            type: 'message'
         });
     }
 
     this.closedHandler = function (data) {
         if (model.tadpoles[data.id]) {
+            vmLog.addLog({
+                type: 'disconnect',
+                message: model.tadpoles[data.id].name + "离开了池塘",
+            })
             delete model.tadpoles[data.id];
             delete model.arrows[data.id];
             vmLog.updateUsers(model.tadpoles);
