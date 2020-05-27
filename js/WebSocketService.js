@@ -15,8 +15,9 @@ var WebSocketService = function (model, webSocket) {
         delete model.tadpoles[-1];
 
         $('#chat').initChat();
-        if ($.cookie('todpole_name')) {
-            webSocketService.sendMessage('name:' + $.cookie('todpole_name'));
+        let name = $.cookie('todpole_name');
+        if (name) {
+            webSocketService.sendMessage('name:' + name);
         }
         if ($.cookie('todpole_sex')) {
             webSocketService.sendMessage('我是' + $.cookie('todpole_sex'));
@@ -45,6 +46,10 @@ var WebSocketService = function (model, webSocket) {
             tadpole.x = data.x;
             tadpole.y = data.y;
             vmLog.updateUsers(model.tadpoles);
+            vmLog.addLog({
+                type: 'connect',
+                user: tadpole,
+            })
         } else {
             tadpole.targetX = data.x;
             tadpole.targetY = data.y;
@@ -64,16 +69,24 @@ var WebSocketService = function (model, webSocket) {
         }
         tadpole.timeSinceLastServerUpdate = 0;
         tadpole.messages.push(new Message(data.message));
-        vmLog.addLog(tadpole, {
-            content: data.message,
-            time: new Date(),
-            x: parseInt(tadpole.x),
-            y: parseInt(tadpole.y)
+        vmLog.addLog({
+            user: tadpole,
+            message: {
+                content: data.message,
+                time: new Date(),
+                x: parseInt(tadpole.x),
+                y: parseInt(tadpole.y)
+            },
+            type: 'message'
         });
     }
 
     this.closedHandler = function (data) {
         if (model.tadpoles[data.id]) {
+            vmLog.addLog({
+                type: 'disconnect',
+                message: model.tadpoles[data.id].name + "离开了池塘",
+            })
             delete model.tadpoles[data.id];
             delete model.arrows[data.id];
             vmLog.updateUsers(model.tadpoles);
@@ -145,7 +158,7 @@ var WebSocketService = function (model, webSocket) {
             return;
         }
 
-        regexp = /^跟随?(.+)/i;
+        regexp = /^跟随(.+)/i;
         if (regexp.test(msg)) {
 
             let _this = this;
@@ -207,18 +220,60 @@ var WebSocketService = function (model, webSocket) {
             app.speed(speed);
         }
 
+        regexp = /^circle(\d+)$/;
+        if (regexp.test(msg)) {
+            let match = msg.match(regexp);
+            let r = (match[1] >= 10 ? parseInt(match[1]) : 50);
+            vmLog.setCircleRadius(r)
+            return;
+        }
+
+        regexp = /^circle(\d+)[,，](\d+)[,，]?(\d+)?$/;
+        if (regexp.test(msg)) {
+            if (typeof circleInterval !== "undefined") {
+                clearInterval(circleInterval);
+            }
+            let match = msg.match(regexp);
+            let x0 = parseInt(match[1]);
+            let y0 = parseInt(match[2]);
+            let r = (match[3] !== undefined && match[3] >= 10 ? parseInt(match[3]) : 100);
+            let degree = 0;
+            circleInterval = setInterval(() => {
+                degree += 10;
+                let hudu = 2 * Math.PI / 360 * degree;
+                let x1 = x0 + Math.sin(hudu) * r;
+                let y1 = y0 - Math.cos(hudu) * r;
+                model.userTadpole.x = x1;
+                model.userTadpole.y = y1;
+            }, 50)
+            return;
+        }
+
+        regexp = /^stop circle$/;
+        if (regexp.test(msg)) {
+            clearInterval(circleInterval);
+            return;
+        }
+
         regexp = /^flicker$/;
         if (regexp.test(msg)) {
-            let _this = this;
-            let interval = setInterval(function () {
+            let sex = model.userTadpole.sex;
+            let interval = setInterval(() => {
+                if (model.userTadpole.sex === -1) {
+                    model.userTadpole.sex = 1;
+                }
                 model.userTadpole.sex = model.userTadpole.sex ^ 1;
                 $.cookie('todpole_sex', model.userTadpole.sex, {
                     expires: 14
                 });
-                _this.sendUpdate(model.userTadpole);
+                this.sendUpdate(model.userTadpole);
             }, 500);
             setTimeout(function () {
                 clearInterval(interval);
+                model.userTadpole.sex = sex;
+                $.cookie('todpole_sex', model.userTadpole.sex, {
+                    expires: 14
+                });
             }, 60000);
             return;
         }
